@@ -1,10 +1,7 @@
 // File: controllers/loan.controller.js
 const Loan = require("../models/loan.model");
-const { TWILIO_SID, TWILIO_TOKEN, TWILIO_PHONE } = require('../config/config');
-// This one line creates the 'twilio' client
-const twilio = require('twilio')(TWILIO_SID, TWILIO_TOKEN);
-
-
+const {BASE_URL,DEVICE_ID,API_KEY} =require('../config/config');    
+const axios=require("axios")
 const getAllLoans = async (req, res) => {
     try {
         var page = parseInt(req.query.page) || 1;
@@ -25,6 +22,7 @@ const getAllLoans = async (req, res) => {
                 }
             }
         ]);
+
         if (loans.length > 0) {
             res.send(loans);
         } else {
@@ -150,27 +148,45 @@ const disburseLoan = async (req, res) => {
         );
 
         // Send SMS notification to customer
-        try {
+        // try {
             
-            const toNumber = `+91${updloan.customerMobile}`;
-             const message = `Dear ${updloan.customerName}, your loan for ${updloan.loanitem} of amount ${netLoanAmount} has been sanctioned. Your EMI is ${emiAmount} for ${updloan.intrest.tenure} months.`;
-             await twilio.messages.create({
-                body: message,
-                from: TWILIO_PHONE,
-                to: toNumber
-            }); 
+        //     const toNumber = `+91${updloan.customerMobile}`;
+        //      const message = `Dear ${updloan.customerName}, your loan for ${updloan.loanitem} of amount ${netLoanAmount} has been sanctioned. Your EMI is ${emiAmount} for ${updloan.intrest.tenure} months.`;
+        //      await twilio.messages.create({
+        //         body: message,
+        //         from: TWILIO_PHONE,
+        //         to: toNumber
+        //     }); 
             
-            console.log(`SMS sent successfully to ${toNumber}`);
-            res.json({ msg: "loan disbursed and SMS sent" });
+        //     console.log(`SMS sent successfully to ${toNumber}`);
+           
 
 
-        } catch (smsError) {
-            // If SMS fails, just log the error. Don't stop the function.
-            console.error("Failed to send SMS:", smsError.message);
-            res.json({ msg: "loan disbursed but failed to send SMS" });
-        }
+        // } catch (smsError) {
+        //     // If SMS fails, just log the error. Don't stop the function.
+        //     console.error("Failed to send SMS:", smsError.message);
+        //     res.json({ msg: "loan disbursed but failed to send SMS" });
+        // }
 
-        res.statu(200).json({ msg: "loan disbursed" });
+    
+
+
+console.log(`+91${updloan.customerMobile}`, 'mmmmmm');
+const response = await axios.post(
+  `${BASE_URL}/gateway/devices/${DEVICE_ID}/send-sms`,
+  {
+    recipients: [ `+91${updloan.customerMobile}` ],
+    message: `Dear ${updloan.customerName}, your loan for ${updloan.loanitem} of amount has been sanctioned .`
+  },
+  { headers: { 'x-api-key': API_KEY } }
+)
+
+    console.log(response.data,'kkkkk')
+
+      
+
+
+        res.statu(200).json({ msg: "loan disbursed" , });
     } catch (error) {
         res.json({ msg: "error in disbursing loan" });
     }
