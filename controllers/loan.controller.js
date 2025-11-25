@@ -1,6 +1,8 @@
 // File: controllers/loan.controller.js
 const Loan = require("../models/loan.model");
-const axios=require("axios")
+const axios = require("axios")
+const { BASE_URL, API_KEY, DEVICE_ID } = require("../config/config");
+
 const getAllLoans = async (req, res) => {
     try {
         var page = parseInt(req.query.page) || 1;
@@ -124,11 +126,6 @@ const disburseLoan = async (req, res) => {
         );
         var Interest = Math.ceil((netLoanAmount * updloan.intrest.rateofintrest) / 12 / 100);
         var Principal = Math.ceil(emiAmount - Interest);
-        
-        // console.log("netLoanAmount", netLoanAmount);
-        // console.log("Intrestrate", Interest);
-        // console.log("Principal", Principal);
-        // console.log("emiAmount", emiAmount);
 
         var emiSchedule = [];
         for (let i = 1; i <= updloan.intrest.tenure; i++) {
@@ -145,46 +142,26 @@ const disburseLoan = async (req, res) => {
             { $push: { emis: { $each: emiSchedule } } }
         );
 
-        // Send SMS notification to customer
-        // try {
-            
-        //     const toNumber = `+91${updloan.customerMobile}`;
-        //      const message = `Dear ${updloan.customerName}, your loan for ${updloan.loanitem} of amount ${netLoanAmount} has been sanctioned. Your EMI is ${emiAmount} for ${updloan.intrest.tenure} months.`;
-        //      await twilio.messages.create({
-        //         body: message,
-        //         from: TWILIO_PHONE,
-        //         to: toNumber
-        //     }); 
-            
-        //     console.log(`SMS sent successfully to ${toNumber}`);
-           
+        try {
+            console.log("Sending SMS via TextBee");
+            // Send SMS
+            const response = await axios.post(
+                `${BASE_URL}/gateway/devices/${DEVICE_ID}/send-sms`,
+                {
+                    recipients: [`+91${updloan.customerMobile}`],
+                    message: `Dear ${updloan.customerName}, your loan for ${updloan.loanitem} of amount has been sanctioned .`
+                },
+                { headers: { 'x-api-key': API_KEY } }
+            )
 
+            console.log(response.data, 'kkkkk')
 
-        // } catch (smsError) {
-        //     // If SMS fails, just log the error. Don't stop the function.
-        //     console.error("Failed to send SMS:", smsError.message);
-        //     res.json({ msg: "loan disbursed but failed to send SMS" });
-        // }
+        }
+        catch (smsError) {
+            console.log("Error sending SMS via TextBee:", smsError.message);
+        }
 
-    
-
-
-console.log(`+91${updloan.customerMobile}`, 'mmmmmm');
-const response = await axios.post(
-  `${BASE_URL}/gateway/devices/${DEVICE_ID}/send-sms`,
-  {
-    recipients: [ `+91${updloan.customerMobile}` ],
-    message: `Dear ${updloan.customerName}, your loan for ${updloan.loanitem} of amount has been sanctioned .`
-  },
-  { headers: { 'x-api-key': API_KEY } }
-)
-
-    console.log(response.data,'kkkkk')
-
-      
-
-
-        res.statu(200).json({ msg: "loan disbursed" , });
+        res.statu(200).json({ msg: "loan disbursed", });
     } catch (error) {
         res.json({ msg: "error in disbursing loan" });
     }
