@@ -3,6 +3,7 @@ const Loan = require("../models/loan.model");
 const axios = require("axios")
 const { BASE_URL, API_KEY, DEVICE_ID } = require("../config/config");
 
+
 const getAllLoans = async (req, res) => {
     try {
         var page = parseInt(req.query.page) || 1;
