@@ -3,7 +3,6 @@ const Loan = require("../models/loan.model");
 const axios = require("axios")
 const { BASE_URL, API_KEY, DEVICE_ID } = require("../config/config");
 
-
 const getAllLoans = async (req, res) => {
     try {
         var page = parseInt(req.query.page) || 1;
@@ -143,24 +142,27 @@ const disburseLoan = async (req, res) => {
             { $push: { emis: { $each: emiSchedule } } }
         );
 
+
+        console.log('url:', `${BASE_URL}/gateway/devices/${DEVICE_ID}/send-sms`);
         try {
-            console.log("Sending SMS via TextBee");
-            // Send SMS
             const response = await axios.post(
                 `${BASE_URL}/gateway/devices/${DEVICE_ID}/send-sms`,
                 {
                     recipients: [`+91${updloan.customerMobile}`],
-                    message: `Dear ${updloan.customerName}, your loan for ${updloan.loanitem} of amount has been sanctioned .`
+                    message: `Dear ${updloan.customerName}, your loan of amount Rs.${netLoanAmount} has been sanction.`
                 },
                 { headers: { 'x-api-key': API_KEY } }
             )
-
-            console.log(response.data, 'kkkkk')
-
+            console.log('SMS response data:', response.data);
+        } catch (smsError) {
+            if (smsError.response) {
+                console.error('SMS error status:', smsError.response.status);
+                console.error('SMS error body:', smsError.response.data);
+            } else {
+                console.error('SMS request error:', smsError.message);
+            }
         }
-        catch (smsError) {
-            console.log("Error sending SMS via TextBee:", smsError.message);
-        }
+
 
         res.statu(200).json({ msg: "loan disbursed", });
     } catch (error) {

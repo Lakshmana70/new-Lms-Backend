@@ -4,6 +4,7 @@ const cors = require("cors");
 const bodyparser = require("body-parser");
 const connectDB = require('./config/db');
 
+
 // Import routes
 const authRoutes = require('./routes/auth.routes');
 const loanRoutes = require('./routes/loan.routes');
@@ -26,8 +27,14 @@ app.use(loanRoutes);
 app.use(interestRoutes);
 app.use(adminRoutes);
 
+
+
 // Start Server
 const PORT = 8500;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+
+
+
